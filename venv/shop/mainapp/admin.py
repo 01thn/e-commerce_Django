@@ -11,10 +11,11 @@ class PhoneAdminForm(ModelForm):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         instance=kwargs.get('instance')
-        if not instance.sd:
-            self.fields['sdVolumeMax'].widget.attrs.update({
-                'readonly':True
-            })
+        if instance:
+            if not instance.sd:
+                self.fields['sdVolumeMax'].widget.attrs.update({
+                    'readonly':True
+                })
 
     def clean(self):
         if not self.cleaned_data['sd']:

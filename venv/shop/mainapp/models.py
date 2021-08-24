@@ -145,6 +145,10 @@ class Product(models.Model):
 
 class Laptop(Product):
 
+    class Meta:
+        verbose_name = "Ноутбук"
+        verbose_name_plural = "Ноутбуки"
+
     diagonal = models.CharField(max_length=255, verbose_name="Диагональ")
     displayType = models.CharField(max_length=255, verbose_name="Тип дисплея")
     processorFreq=models.CharField(max_length=255,verbose_name="Частота процессора")
@@ -160,6 +164,10 @@ class Laptop(Product):
 
 
 class Phone(Product):
+
+    class Meta:
+        verbose_name = "Телефон"
+        verbose_name_plural = "Телефоны"
 
     diagonal = models.CharField(max_length=255, verbose_name="Диагональ")
     displayType = models.CharField(max_length=255, verbose_name="Тип дисплея")
