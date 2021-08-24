@@ -77,6 +77,7 @@ class CategoryManager(models.Manager):
         ]
         return data
 
+
 class Category(models.Model):
 
     name = models.CharField(max_length = 255, verbose_name = "Имя категории")
