@@ -17,7 +17,7 @@ def get_models_for_count(*model_names):
     return [models.Count(model_name) for model_name in model_names]
 
 def get_product_url(obj, viewname):
-    ct_model = obj.__class__.meta.model.name
+    ct_model = obj.__class__._meta.model.__name__.lower()
     return reverse(viewname, kwargs={'ct_model': ct_model, 'slug':obj.slug})
 
 
@@ -70,8 +70,12 @@ class CategoryManager(models.Manager):
 
     def get_categories(self):
         models=get_models_for_count('laptop','phone')
-        qs=list(self.get_queryset().annotate(*models).values())
-        return [dict(name=c['name'],slug=c['slug'],count=c[self.CATEGORY_NAME_COUNT_NAME[c['name']]])for c in qs]
+        qs=list(self.get_queryset().annotate(*models))
+        data=[
+            dict(name=c.name,url=c.get_absolute_url(),count=getattr(c,self.CATEGORY_NAME_COUNT_NAME[c.name]))
+            for c in qs
+        ]
+        return data
 
 class Category(models.Model):
 
@@ -81,6 +85,9 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse('category_detail',kwargs={'slug':self.slug})
 
 
 class Product(models.Model):
@@ -132,11 +139,11 @@ class Product(models.Model):
         #     )
         super().save(*args,**kwargs)
 
-class Laptop(Product):
+    def get_absolute_url(self):
+        return get_product_url(self, 'product_detail')
 
-    class Meta:
-        verbose_name = "Ноутбук"
-        verbose_name_plural = "Ноутбуки"
+
+class Laptop(Product):
 
     diagonal = models.CharField(max_length=255, verbose_name="Диагональ")
     displayType = models.CharField(max_length=255, verbose_name="Тип дисплея")
@@ -154,16 +161,12 @@ class Laptop(Product):
 
 class Phone(Product):
 
-    class Meta:
-        verbose_name ="Телефон"
-        verbose_name_plural = "Телефоны"
-
     diagonal = models.CharField(max_length=255, verbose_name="Диагональ")
     displayType = models.CharField(max_length=255, verbose_name="Тип дисплея")
     resolution = models.CharField(max_length=255, verbose_name="Разрешение экрана")
     batteryVolume = models.CharField(max_length=255, verbose_name="Объем батареи")
     ram = models.CharField(max_length=255, verbose_name="Оперативная память")
-    sd = models.BooleanField(default=True, verbose_name="Наличие SD карты")
+    sd = models.BooleanField(default=False, verbose_name="Наличие SD карты")
     sdVolumeMax=models.PositiveIntegerField(null=True, blank=True, verbose_name="Макс. объем встраиваемой памяти")
     mainCamera=models.CharField(max_length=255, verbose_name="Основная камера (МП)")
     frontalCamera=models.CharField(max_length=255, verbose_name="Фронтальная камера (МП)")
