@@ -70,7 +70,7 @@ class AddToCartView(View):
         cart = Cart.objects.get(owner=customer, in_order=False)
         content_type = ContentType.objects.get(model=ct_model)
         product = content_type.model_class().objects.get(slug=product_slug)
-        cart_product, created = CartProduct.objects.create(
+        cart_product = CartProduct.objects.create(
             user=cart.owner,
             cart=cart,
             content_object=product,
