@@ -16,6 +16,8 @@
         <h3>{{ product.title }}</h3>
         <h5>Цена: {{ product.price }} руб.</h5>
         <p>Описание: {{ product.description }} </p>
+        <hr>
+        <a class="btn btn-danger" role="button" href="{% url 'add_to_cart' ct_model=ct_model slug=product.slug %}">Добавить в корзину</a>
     </div>
         <p class="mt-4">Характеристики:</p>
     {% if product.category.slug == 'laptops' %}
