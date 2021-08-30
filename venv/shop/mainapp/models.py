@@ -200,11 +200,15 @@ class CartProduct(models.Model):
     def __str__(self):
         return "Продукт {} (для корзины)".format(self.content_object.title)
 
+    def save(self, *args, **kwargs):
+        self.finalPrice = self.qty * self.content_object.price
+        super().save(*args, **kwargs)
+
 
 class Cart(models.Model):
 
-    owner = models.ForeignKey("Customer", verbose_name = "Владелец", on_delete = models.CASCADE)
-    products = models.ManyToManyField(CartProduct, blank=True, related_name="realted_cart")
+    owner = models.ForeignKey("Customer", verbose_name = "Владелец", null=True, on_delete = models.CASCADE)
+    products = models.ManyToManyField(CartProduct, blank=True, related_name="related_cart")
     totalProducts = models.PositiveIntegerField(default=0)
     finalPrice = models.DecimalField(max_digits = 9, decimal_places = 2, verbose_name = "Общая цена", default=0)
     in_order = models.BooleanField(default=False)
@@ -217,8 +221,8 @@ class Cart(models.Model):
 class Customer(models.Model):
 
     user = models.ForeignKey(User, verbose_name = "Пользователь", on_delete=models.CASCADE)
-    phone = models.CharField(max_length=20, verbose_name="Номер телефона")
-    adress = models.CharField(max_length=255, verbose_name="Адрес")
+    phone = models.CharField(max_length=20, verbose_name="Номер телефона", null=True, blank=True)
+    address = models.CharField(max_length=255, verbose_name="Адрес", null=True, blank=True)
 
     def __str__(self):
         # return "Покупатель {} {}".format(self.user.firstName, self.user.lastName)

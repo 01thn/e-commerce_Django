@@ -4,22 +4,24 @@ from django.contrib.contenttypes.models import ContentType
 from django.views.generic import DetailView, View
 
 from .models import Laptop, Phone, Category, LatestProducts, Customer, Cart, CartProduct
-from .mixins import CategoryDetailMixin
+from .mixins import CategoryDetailMixin, CartMixin
 
 
-class BaseView(View):
+class BaseView(CartMixin, View):
 
     def get(self,request,*args,**kwargs):
+
         categories = Category.objects.get_categories()
         products = LatestProducts.objects.get_products_for_main_page('laptop','phone')
         context = {
-            'categories':categories,
-            'products':products
+            'categories': categories,
+            'products': products,
+            'cart': self.cart
         }
         return render(request,'base.html', context)
 
 
-class ProductDetailView(CategoryDetailMixin, DetailView):
+class ProductDetailView(CartMixin, CategoryDetailMixin, DetailView):
 
     CT_MODEL_MODEL_CLASS = {
         'laptop': Laptop,
@@ -41,7 +43,7 @@ class ProductDetailView(CategoryDetailMixin, DetailView):
         return context
 
 
-class CategoryDetailView(CategoryDetailMixin, DetailView):
+class CategoryDetailView(CartMixin, CategoryDetailMixin, DetailView):
 
     model = Category
     queryset = Category.objects.all()
@@ -49,19 +51,17 @@ class CategoryDetailView(CategoryDetailMixin, DetailView):
     template_name = 'category_detail.html'
     slug_url_kwarg = 'slug'
 
-class CartView(View):
+class CartView(CartMixin,View):
 
     def get(self, request, *args, **kwargs):
-        customer=Customer.objects.get(user=request.user)
-        cart=Cart.objects.get(owner=customer)
         categories = Category.objects.get_categories()
         context={
-            'cart': cart,
+            'cart': self.cart,
             'categories': categories
         }
         return render(request, 'cart.html', context)
 
-class AddToCartView(View):
+class AddToCartView(CartMixin, View):
 
     def get(self, request, *args, **kwargs):
         ct_model = kwargs.get('ct_model')
@@ -69,12 +69,13 @@ class AddToCartView(View):
         customer = Customer.objects.get(user=request.user)
         cart = Cart.objects.get(owner=customer, in_order=False)
         content_type = ContentType.objects.get(model=ct_model)
-        product = content_type.model_class().objects.get(slug=product_slug)
+        product, created = content_type.model_class().objects.get_or_create(slug=product_slug)
         cart_product = CartProduct.objects.create(
-            user=cart.owner,
-            cart=cart,
-            content_object=product,
-            finalPrice=product.price
+            user=self.cart.owner,
+            cart=self.cart,
+            content_type=content_type,
+            object_id=product.id,
+            content_object=product
         )
-        cart.products.add(cart_product)
+        self.cart.products.add(cart_product)
         return HttpResponseRedirect('/cart/')

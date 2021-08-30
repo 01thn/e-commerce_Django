@@ -19,7 +19,7 @@
           <td class="w-25"><img class="img-fluid" src="{{ item.content_object.image.url }}"></td>
           <td>{{ item.content_object.price }}</td>
           <td>{{ item.qty }}</td>
-          <td>{{ CartProduct.finalPrice }}</td>
+          <td>{{ item.finalPrice }}</td>
         </tr>
   {% endfor %}
   </tbody>
