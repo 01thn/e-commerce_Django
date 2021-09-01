@@ -143,6 +143,9 @@ class Product(models.Model):
     def get_absolute_url(self):
         return get_product_url(self, 'product_detail')
 
+    def get_model_name(self):
+        return self.__class__.__name__.lower()
+
 
 class Laptop(Product):
 
@@ -217,6 +220,15 @@ class Cart(models.Model):
     def __str__(self):
         return "ID:{}".format(self.id)
 
+    def save(self, *args, **kwargs):
+        cart_data = self.products.aggregate(models.Sum('finalPrice'), models.Count('id'))
+        if cart_data.get('finalPrice__sum'):
+            self.finalPrice = cart_data['finalPrice__sum']
+        else:
+            self.finalPrice = 0
+        self.totalProducts = cart_data['id__count']
+        super().save(*args,**kwargs)
+
 
 class Customer(models.Model):
 
@@ -226,7 +238,7 @@ class Customer(models.Model):
 
     def __str__(self):
         # return "Покупатель {} {}".format(self.user.firstName, self.user.lastName)
-        return "Покупатель {} {}".format(self.phone, self.adress)
+        return "Покупатель {} {}".format(self.phone, self.address)
 
 
 class Specifications(models.Model):
